@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ad Duha Luxury Perfume Design System
+   Inspired by luxury, elegance, and Arabic heritage
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* XLNC-Inspired Color Theme - Clean & Minimal */
+    --background: 0 0% 100%;  /* Pure white */
+    --foreground: 0 0% 0%;  /* Pure black text */
+
+    --card: 0 0% 98%;  /* Off-white for cards */
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* Gold Accents - Refined */
+    --primary: 38 92% 50%;  /* Rich gold #F5A623 */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 40 20% 85%;  /* Light beige #E8DED1 */
+    --secondary-foreground: 0 0% 0%;
+
+    /* Elegant Neutral Tones */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 38 92% 50%;  /* Gold accent */
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 38 92% 50%;
+
+    --radius: 0.375rem;
+
+    /* Clean Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(38 92% 50%), hsl(40 85% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+
+    /* Subtle Shadows */
+    --shadow-luxury: 0 10px 40px -10px hsl(0 0% 0% / 0.15);
+    --shadow-card: 0 2px 10px hsl(0 0% 0% / 0.08);
+
+    /* Animations */
+    --transition-smooth: all 0.3s ease;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 7%;  /* Very dark background */
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 38 92% 50%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  }
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.marquee-container {
+  display: flex;
+  width: max-content;
+}
+
+.marquee-content {
+  padding-right: 4rem;
+}
