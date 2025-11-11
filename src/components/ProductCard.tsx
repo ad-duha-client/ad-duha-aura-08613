@@ -4,7 +4,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 
 interface ProductCardProps {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   originalPrice?: number;

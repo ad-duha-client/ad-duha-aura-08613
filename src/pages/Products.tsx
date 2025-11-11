@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
-import { perfumes } from "@/data/perfumes";
 import { Button } from "@/components/ui/button";
+import { useProducts } from "@/hooks/useProducts";
 
 const Products = () => {
+  const { data: products = [], isLoading } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedGender, setSelectedGender] = useState<string>("All");
@@ -22,12 +23,12 @@ const Products = () => {
     if (genderParam) {
       // Map URL gender values to internal values
       const genderMap: { [key: string]: string } = {
-        "Male": "Men",
-        "Female": "Women",
-        "Unisex": "Unisex"
+        "Male": "men",
+        "Female": "women",
+        "Unisex": "unisex"
       };
-      const mappedGender = genderMap[genderParam] || genderParam;
-      if (["Men", "Women", "Unisex"].includes(mappedGender)) {
+      const mappedGender = genderMap[genderParam] || genderParam.toLowerCase();
+      if (["men", "women", "unisex"].includes(mappedGender)) {
         setSelectedGender(mappedGender);
         setSelectedCategory("All"); // Reset category when filtering by gender
       }
@@ -35,13 +36,27 @@ const Products = () => {
   }, [searchParams]);
 
   const categories = ["All", "Premium", "Niche", "Signature", "Luxury"];
-  const genders = ["All", "Men", "Women", "Unisex"];
+  const genders = ["All", "men", "women", "unisex"];
 
-  const filteredPerfumes = perfumes.filter((perfume) => {
-    const categoryMatch = selectedCategory === "All" || perfume.category === selectedCategory;
-    const genderMatch = selectedGender === "All" || perfume.audience === selectedGender;
+  const filteredPerfumes = products.filter((product) => {
+    const categoryMatch = selectedCategory === "All" || product.categories?.name === selectedCategory;
+    const genderMatch = selectedGender === "All" || product.gender === selectedGender;
     return categoryMatch && genderMatch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 pb-16 px-4 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading products...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +86,6 @@ const Products = () => {
                     variant={selectedCategory === category ? "default" : "outline"}
                     onClick={() => {
                       setSelectedCategory(category);
-                      // Clear URL params when clicking filter buttons
                       setSearchParams({});
                     }}
                     className="transition-all"
@@ -92,12 +106,11 @@ const Products = () => {
                     variant={selectedGender === gender ? "default" : "outline"}
                     onClick={() => {
                       setSelectedGender(gender);
-                      // Clear URL params when clicking filter buttons
                       setSearchParams({});
                     }}
                     className="transition-all"
                   >
-                    {gender}
+                    {gender.charAt(0).toUpperCase() + gender.slice(1)}
                   </Button>
                 ))}
               </div>
@@ -113,16 +126,16 @@ const Products = () => {
 
           {/* Products Grid */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPerfumes.map((perfume) => (
-              <Link key={perfume.id} to={`/perfumes/${perfume.slug}`}>
+            {filteredPerfumes.map((product) => (
+              <Link key={product.id} to={`/perfumes/${product.slug}`}>
                 <ProductCard
-                  id={perfume.id}
-                  name={perfume.name}
-                  price={perfume.price}
-                  originalPrice={perfume.mrp}
-                  image={perfume.image}
-                  category={perfume.category}
-                  isPremium={perfume.mrp >= 1700}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  originalPrice={product.compare_at_price || product.price}
+                  image={product.image_url || '/lovable-uploads/logo.png'}
+                  category={product.categories?.name || 'Premium'}
+                  isPremium={(product.compare_at_price || 0) >= 1700}
                 />
               </Link>
             ))}

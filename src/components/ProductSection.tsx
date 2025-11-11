@@ -1,15 +1,15 @@
 import { ProductCard } from "./ProductCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { perfumes } from "@/data/perfumes";
 
 interface Product {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   originalPrice?: number;
   image: string;
   category: string;
+  slug?: string;
   isPremium?: boolean;
 }
 
@@ -41,17 +41,14 @@ export const ProductSection = ({
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {products.map((product) => {
-            const perfume = perfumes.find(p => p.id === product.id);
-            return (
-              <Link key={product.id} to={perfume ? `/perfumes/${perfume.slug}` : '#'}>
-                <ProductCard
-                  {...product}
-                  isPremium={isPremium}
-                />
-              </Link>
-            );
-          })}
+          {products.map((product) => (
+            <Link key={product.id} to={product.slug ? `/perfumes/${product.slug}` : '#'}>
+              <ProductCard
+                {...product}
+                isPremium={isPremium}
+              />
+            </Link>
+          ))}
         </div>
 
         {/* View All Button */}

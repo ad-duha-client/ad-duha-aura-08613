@@ -2,14 +2,29 @@ import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { perfumes } from "@/data/perfumes";
 import { ShoppingCart, Heart, ArrowLeft, Star } from "lucide-react";
 import { useState } from "react";
+import { useProductBySlug, useProducts } from "@/hooks/useProducts";
 
 const ProductDetail = () => {
   const { slug } = useParams();
-  const perfume = perfumes.find((p) => p.slug === slug);
+  const { data: perfume, isLoading } = useProductBySlug(slug);
+  const { data: allProducts = [] } = useProducts();
   const [isLiked, setIsLiked] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 pb-16 px-4 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading product...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!perfume) {
     return (
@@ -26,6 +41,10 @@ const ProductDetail = () => {
       </div>
     );
   }
+
+  const discount = perfume.compare_at_price 
+    ? Math.round(((perfume.compare_at_price - perfume.price) / perfume.compare_at_price) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,11 +64,11 @@ const ProductDetail = () => {
             <Card className="overflow-hidden">
               <div className="aspect-square relative">
                 <img
-                  src={perfume.image}
+                  src={perfume.image_url || '/lovable-uploads/logo.png'}
                   alt={perfume.name}
                   className="w-full h-full object-cover"
                 />
-                {perfume.price > 5000 && (
+                {(perfume.compare_at_price || 0) >= 1700 && (
                   <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-semibold">
                     Premium
                   </div>
@@ -71,7 +90,7 @@ const ProductDetail = () => {
             <div className="flex flex-col">
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">
-                  {perfume.category} • For {perfume.audience}
+                  {perfume.categories?.name || 'Premium'} • For {perfume.gender?.charAt(0).toUpperCase() + perfume.gender?.slice(1) || 'All'}
                 </p>
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                   {perfume.name}
@@ -80,12 +99,18 @@ const ProductDetail = () => {
                   <span className="text-3xl font-bold text-primary">
                     ₹{perfume.price.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-xl text-muted-foreground line-through">
-                    ₹{perfume.mrp.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
-                    {Math.round(((perfume.mrp - perfume.price) / perfume.mrp) * 100)}% OFF
-                  </span>
+                  {perfume.compare_at_price && (
+                    <>
+                      <span className="text-xl text-muted-foreground line-through">
+                        ₹{perfume.compare_at_price.toLocaleString('en-IN')}
+                      </span>
+                      {discount > 0 && (
+                        <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                          {discount}% OFF
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -254,33 +279,35 @@ const ProductDetail = () => {
               You May Also Like
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {perfumes
-                .filter((p) => p.id !== perfume.id && p.audience === perfume.audience)
+              {allProducts
+                .filter((p) => p.id !== perfume.id && p.gender === perfume.gender)
                 .slice(0, 4)
-                .map((relatedPerfume) => (
-                  <Link key={relatedPerfume.id} to={`/perfumes/${relatedPerfume.slug}`}>
+                .map((relatedProduct) => (
+                  <Link key={relatedProduct.id} to={`/perfumes/${relatedProduct.slug}`}>
                     <Card className="group relative overflow-hidden bg-card hover:shadow-luxury transition-all duration-500 transform hover:-translate-y-2">
                       <div className="relative aspect-square overflow-hidden">
                         <img
-                          src={relatedPerfume.image}
-                          alt={relatedPerfume.name}
+                          src={relatedProduct.image_url || '/lovable-uploads/logo.png'}
+                          alt={relatedProduct.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       </div>
                       <CardContent className="p-4">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
-                          {relatedPerfume.category}
+                          {relatedProduct.categories?.name || 'Premium'}
                         </p>
                         <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                          {relatedPerfume.name}
+                          {relatedProduct.name}
                         </h3>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-primary">
-                            ₹{relatedPerfume.price.toLocaleString('en-IN')}
+                            ₹{relatedProduct.price.toLocaleString('en-IN')}
                           </span>
-                          <span className="text-sm text-muted-foreground line-through">
-                            ₹{relatedPerfume.mrp.toLocaleString('en-IN')}
-                          </span>
+                          {relatedProduct.compare_at_price && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              ₹{relatedProduct.compare_at_price.toLocaleString('en-IN')}
+                            </span>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
