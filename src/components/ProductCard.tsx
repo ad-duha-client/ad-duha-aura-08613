@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
+import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   id: string | number;
@@ -23,6 +27,22 @@ export const ProductCard = ({
   isPremium = false 
 }: ProductCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Please login to add items to cart");
+      navigate("/auth");
+      return;
+    }
+
+    addToCart.mutate({ productId: id.toString() });
+  };
   
   // Generate random rating between 4.0 and 5.0
   const rating = (4 + Math.random()).toFixed(1);
@@ -52,7 +72,7 @@ export const ProductCard = ({
         </button>
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0">
-          <Button variant="luxury" size="sm">
+          <Button variant="luxury" size="sm" onClick={handleAddToCart}>
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart
           </Button>

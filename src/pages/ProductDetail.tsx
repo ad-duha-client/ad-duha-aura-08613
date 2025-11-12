@@ -1,16 +1,34 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Heart, ArrowLeft, Star } from "lucide-react";
 import { useState } from "react";
 import { useProductBySlug, useProducts } from "@/hooks/useProducts";
+import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { slug } = useParams();
   const { data: perfume, isLoading } = useProductBySlug(slug);
   const { data: allProducts = [] } = useProducts();
   const [isLiked, setIsLiked] = useState(false);
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAddToCart = () => {
+    if (!user) {
+      toast.error("Please login to add items to cart");
+      navigate("/auth");
+      return;
+    }
+
+    if (perfume) {
+      addToCart.mutate({ productId: perfume.id });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -126,11 +144,19 @@ const ProductDetail = () => {
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="luxury" size="lg" className="flex-1">
+                <Button variant="luxury" size="lg" className="flex-1" onClick={handleAddToCart}>
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </Button>
-                <Button variant="premium" size="lg" className="flex-1">
+                <Button 
+                  variant="premium" 
+                  size="lg" 
+                  className="flex-1"
+                  onClick={() => {
+                    handleAddToCart();
+                    navigate("/cart");
+                  }}
+                >
                   Buy Now
                 </Button>
               </div>

@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, User, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, ShoppingBag, User, ChevronDown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/hooks/useCart";
+import { toast } from "sonner";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -25,6 +28,15 @@ const navItems = [
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
+  const { cartCount } = useCart();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
   const [dropdownTimeout, setDropdownTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = (itemName: string) => {
@@ -99,12 +111,32 @@ export const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <ShoppingBag className="h-5 w-5" />
-            </Button>
+            <Link to="/cart" className="relative">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <ShoppingBag className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSignOut}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -125,12 +157,32 @@ export const Navbar = () => {
               />
             </Link>
             <div className="flex items-center gap-1 absolute right-0">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <User className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <ShoppingBag className="h-5 w-5" />
-              </Button>
+              <Link to="/cart" className="relative">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <ShoppingBag className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              {user ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSignOut}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
