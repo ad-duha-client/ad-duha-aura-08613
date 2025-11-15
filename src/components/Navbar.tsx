@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingBag, User, ChevronDown, LogOut } from "lucide-react";
+import { Menu, X, ShoppingBag, User, ChevronDown, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/hooks/useCart";
+import { useAdmin } from "@/hooks/useAdmin";
 import { toast } from "sonner";
 
 const navItems = [
@@ -30,6 +31,7 @@ export const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { cartCount } = useCart();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -121,6 +123,13 @@ export const Navbar = () => {
                 )}
               </Button>
             </Link>
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <Shield className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
             {user ? (
               <Button
                 variant="ghost"
