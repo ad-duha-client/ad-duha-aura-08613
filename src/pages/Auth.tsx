@@ -13,6 +13,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
@@ -39,7 +40,12 @@ const Auth = () => {
           setLoading(false);
           return;
         }
-        const { error } = await signUp(email, password, fullName);
+        if (!phone.trim()) {
+          toast.error("Please enter your phone number");
+          setLoading(false);
+          return;
+        }
+        const { error } = await signUp(email, password, fullName, phone);
         if (error) throw error;
         toast.success("Account created! Please check your email to verify.");
       }
@@ -67,17 +73,30 @@ const Auth = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required={!isLogin}
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        type="text"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required={!isLogin}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+1234567890"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required={!isLogin}
+                      />
+                    </div>
+                  </>
                 )}
                 
                 <div className="space-y-2">
