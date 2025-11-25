@@ -31,11 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch order details
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select(`
-        *,
-        profiles:user_id (email, full_name),
-        addresses:shipping_address_id (*)
-      `)
+      .select("*")
       .eq("id", orderId)
       .single();
 
@@ -43,6 +39,20 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error fetching order:", orderError);
       throw new Error("Order not found");
     }
+
+    // Fetch user profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", order.user_id)
+      .single();
+
+    // Fetch shipping address
+    const { data: address } = await supabase
+      .from("addresses")
+      .select("*")
+      .eq("id", order.shipping_address_id)
+      .single();
 
     // Fetch order items
     const { data: orderItems, error: itemsError } = await supabase
@@ -55,9 +65,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to fetch order items");
     }
 
-    const customerEmail = order.profiles?.email;
-    const customerName = order.profiles?.full_name || "Customer";
-    const shippingAddress = order.addresses;
+    const customerEmail = profile?.email;
+    const customerName = profile?.full_name || "Customer";
+    const shippingAddress = address;
 
     // Build order items HTML
     const itemsHtml = orderItems
