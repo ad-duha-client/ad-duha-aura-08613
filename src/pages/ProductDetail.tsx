@@ -8,12 +8,17 @@ import { useProductBySlug, useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useProductReviews } from "@/hooks/useReviews";
+import { ReviewForm } from "@/components/ReviewForm";
+import { formatDistanceToNow } from "date-fns";
 
 const ProductDetail = () => {
   const { slug } = useParams();
   const { data: perfume, isLoading } = useProductBySlug(slug);
   const { data: allProducts = [] } = useProducts();
+  const { data: reviews = [], isLoading: reviewsLoading } = useProductReviews(perfume?.id);
   const [isLiked, setIsLiked] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,6 +68,18 @@ const ProductDetail = () => {
   const discount = perfume.compare_at_price 
     ? Math.round(((perfume.compare_at_price - perfume.price) / perfume.compare_at_price) * 100)
     : 0;
+
+  // Calculate average rating
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
+    : 0;
+
+  // Calculate rating distribution
+  const ratingDistribution = [5, 4, 3, 2, 1].map(stars => {
+    const count = reviews.filter(r => r.rating === stars).length;
+    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+    return { stars, count, percentage: Math.round(percentage) };
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,122 +196,135 @@ const ProductDetail = () => {
               <CardContent className="p-8">
                 <h2 className="text-3xl font-bold text-foreground mb-8">Customer Reviews</h2>
                 
-                {/* Overall Rating Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 pb-8 border-b border-border">
-                  {/* Average Rating */}
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="text-6xl font-bold text-foreground mb-2">4.8</div>
-                    <div className="flex items-center gap-1 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-6 w-6 ${
-                            star <= 5 ? "fill-primary text-primary" : "text-muted"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-muted-foreground">Based on 247 reviews</p>
+                {reviewsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                   </div>
-
-                  {/* Rating Breakdown */}
-                  <div className="space-y-3">
-                    {[
-                      { stars: 5, count: 189, percentage: 77 },
-                      { stars: 4, count: 42, percentage: 17 },
-                      { stars: 3, count: 12, percentage: 5 },
-                      { stars: 2, count: 3, percentage: 1 },
-                      { stars: 1, count: 1, percentage: 0 },
-                    ].map((rating) => (
-                      <div key={rating.stars} className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-foreground w-12">
-                          {rating.stars} star
-                        </span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full"
-                            style={{ width: `${rating.percentage}%` }}
-                          />
+                ) : (
+                  <>
+                    {/* Overall Rating Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 pb-8 border-b border-border">
+                      {/* Average Rating */}
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="text-6xl font-bold text-foreground mb-2">
+                          {reviews.length > 0 ? averageRating.toFixed(1) : "0.0"}
                         </div>
-                        <span className="text-sm text-muted-foreground w-12 text-right">
-                          {rating.count}
-                        </span>
+                        <div className="flex items-center gap-1 mb-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-6 w-6 ${
+                                star <= Math.round(averageRating) ? "fill-primary text-primary" : "text-muted"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-muted-foreground">
+                          Based on {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Individual Reviews */}
-                <div className="space-y-6">
-                  {[
-                    {
-                      name: "Priya Sharma",
-                      rating: 5,
-                      date: "2 weeks ago",
-                      review: "Absolutely love this fragrance! The scent is long-lasting and sophisticated. Perfect for both day and evening wear. Highly recommend!",
-                      verified: true,
-                    },
-                    {
-                      name: "Rahul Verma",
-                      rating: 5,
-                      date: "1 month ago",
-                      review: "One of the best perfumes I've ever purchased. The quality is exceptional and the fragrance notes are perfectly balanced. Worth every rupee!",
-                      verified: true,
-                    },
-                    {
-                      name: "Anjali Patel",
-                      rating: 4,
-                      date: "1 month ago",
-                      review: "Beautiful scent that lasts all day. The packaging is luxurious and makes for a great gift. Only minus is it's a bit pricey, but quality justifies the cost.",
-                      verified: true,
-                    },
-                    {
-                      name: "Arjun Malhotra",
-                      rating: 5,
-                      date: "2 months ago",
-                      review: "Exceptional fragrance! The blend is unique and gets compliments everywhere I go. Fast delivery and secure packaging too.",
-                      verified: true,
-                    },
-                  ].map((review, index) => (
-                    <div key={index} className="pb-6 border-b border-border last:border-0">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-foreground">{review.name}</h4>
-                            {review.verified && (
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                Verified Purchase
-                              </span>
+                      {/* Rating Breakdown */}
+                      <div className="space-y-3">
+                        {ratingDistribution.map((rating) => (
+                          <div key={rating.stars} className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-foreground w-12">
+                              {rating.stars} star
+                            </span>
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${rating.percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm text-muted-foreground w-12 text-right">
+                              {rating.count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Form */}
+                    {showReviewForm && (
+                      <div className="mb-8 p-6 border border-border rounded-lg">
+                        <h3 className="text-xl font-semibold text-foreground mb-4">Write Your Review</h3>
+                        <ReviewForm productId={perfume.id} onClose={() => setShowReviewForm(false)} />
+                      </div>
+                    )}
+
+                    {/* Individual Reviews */}
+                    {reviews.length > 0 ? (
+                      <div className="space-y-6">
+                        {reviews.map((review) => (
+                          <div key={review.id} className="pb-6 border-b border-border last:border-0">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold text-foreground">
+                                    {review.profiles?.full_name || "Anonymous"}
+                                  </h4>
+                                  {review.is_verified && (
+                                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                      Verified Purchase
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`h-4 w-4 ${
+                                          star <= review.rating
+                                            ? "fill-primary text-primary"
+                                            : "text-muted"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-sm text-muted-foreground">
+                                    {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            {review.title && (
+                              <h5 className="font-medium text-foreground mb-2">{review.title}</h5>
+                            )}
+                            {review.comment && (
+                              <p className="text-muted-foreground leading-relaxed">{review.comment}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-0.5">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`h-4 w-4 ${
-                                    star <= review.rating
-                                      ? "fill-primary text-primary"
-                                      : "text-muted"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm text-muted-foreground">{review.date}</span>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                      <p className="text-muted-foreground leading-relaxed">{review.review}</p>
-                    </div>
-                  ))}
-                </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review this product!</p>
+                      </div>
+                    )}
 
-                {/* Write Review Button */}
-                <div className="mt-8 pt-8 border-t border-border text-center">
-                  <Button variant="default" size="lg">
-                    Write a Review
-                  </Button>
-                </div>
+                    {/* Write Review Button */}
+                    {!showReviewForm && (
+                      <div className="mt-8 pt-8 border-t border-border text-center">
+                        <Button 
+                          variant="default" 
+                          size="lg"
+                          onClick={() => {
+                            if (!user) {
+                              toast.error("Please login to write a review");
+                              navigate("/auth");
+                              return;
+                            }
+                            setShowReviewForm(true);
+                          }}
+                        >
+                          Write a Review
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </section>
