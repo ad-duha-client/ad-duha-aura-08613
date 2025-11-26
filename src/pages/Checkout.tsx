@@ -101,6 +101,15 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
+      // Trigger order confirmation email (non-blocking for user experience)
+      try {
+        await supabase.functions.invoke("send-order-email", {
+          body: { orderId: orderData.id },
+        });
+      } catch (emailError) {
+        console.error("Failed to send order email", emailError);
+      }
+
       // Clear cart
       await clearCart.mutateAsync();
 
